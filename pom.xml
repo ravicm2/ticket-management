@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.ticket.management</groupId>
 	<artifactId>ticketmanagement</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>202406</version>
 	<name>ticketmanagement</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
