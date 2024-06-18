@@ -1,5 +1,3 @@
-# ticket-management
-
 # Ticket Management System
 
 ## Overview
