@@ -1,13 +1,18 @@
 package com.ticket.management.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity(name = "User")
+import java.util.List;
+
+@Entity(name = "ticket_User")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -27,5 +32,9 @@ public class UserEntity extends BaseEntity {
     private String phoneNumber;
 
     @Column(name = "address")
+
     private String address;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TicketEntity> ticketEntityList;
 }
