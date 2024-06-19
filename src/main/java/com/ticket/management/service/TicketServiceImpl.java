@@ -54,22 +54,12 @@ public class TicketServiceImpl {
         if (totalAvailableSeats < (long) requestDTO.getQuantity())
             throw new Exception("Seats are not available for the requested Quantity. Available seats in the section are :" + totalAvailableSeats);
 
-//        Optional<SeatEntity> optionalSeatEntity = seatRepository.findBySectionAndSeatNumber(Section.valueOf(requestDTO.getSection()), requestDTO.getSeatNumber());
-//        if (optionalSeatEntity.isEmpty())
-//            throw new Exception("Selected seat Number is not available! Kindly choose some other seat");
-
         List<SeatEntity> seatEntityList = seatRepository.findAvailableSeats(requestDTO.getSection(), PageRequest.of(0, requestDTO.getQuantity()));
 
         List<SeatEntity> updatedSeatEntityList = seatEntityList.stream().map(seatEntity -> {
             seatEntity.setIsBooked(true);
             return seatRepository.save(seatEntity);
         }).toList();
-
-
-//        SeatEntity updatedSeatEntity = optionalSeatEntity.map(seatEntity -> {
-//            seatEntity.setIsBooked(true);
-//            return seatRepository.save(seatEntity);
-//        }).get();
 
         UserEntity userEntity = new UserEntity();
         userEntity.setFirstName(requestDTO.getUser().getFirstName());
