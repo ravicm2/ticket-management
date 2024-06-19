@@ -19,7 +19,6 @@ public class TicketPurchaseRequestDTO {
     private String toLocation;
     private LocalDate travelDate;
     private String section;
-    private String seatNumber;
     private int quantity;
 
 }

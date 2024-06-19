@@ -12,6 +12,7 @@ import com.ticket.management.entity.TicketEntity;
 import com.ticket.management.entity.UserEntity;
 import com.ticket.management.enums.Section;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Service
 @Transactional
@@ -33,27 +33,43 @@ public class TicketServiceImpl {
     @Autowired
     private UserRepository userRepository;
 
+    private static void createTicketEntity(TicketPurchaseRequestDTO requestDTO, UserEntity finalUserEntity, SeatEntity seatEntity, List<TicketEntity> ticketEntityList) {
+        TicketEntity ticketEntity = new TicketEntity();
+        ticketEntity.setBookingDate(LocalDate.now());
+        ticketEntity.setBoardingStation(requestDTO.getFromLocation());
+        ticketEntity.setDestinationStation(requestDTO.getToLocation());
+        ticketEntity.setTravelDate(requestDTO.getTravelDate());
+        ticketEntity.setUser(finalUserEntity);
+        ticketEntity.setSeat(seatEntity);
+        ticketEntityList.add(ticketEntity);
+    }
+
     public List<TicketDTO> purchaseTicket(TicketPurchaseRequestDTO requestDTO) throws Exception {
 
-        if (requestDTO.getQuantity() > 6) {
-            throw new Exception("Max 6 tickets are permitted for a user");
+        if (requestDTO.getQuantity() > 2) {
+            throw new Exception("Max 2 tickets are permitted for a user");
         }
 
         long totalAvailableSeats = seatRepository.countBySectionAndIsBookedFalse(Section.valueOf(requestDTO.getSection()));
-
         if (totalAvailableSeats < (long) requestDTO.getQuantity())
             throw new Exception("Seats are not available for the requested Quantity. Available seats in the section are :" + totalAvailableSeats);
 
-        Optional<SeatEntity> optionalSeatEntity = seatRepository.findBySectionAndSeatNumber(Section.valueOf(requestDTO.getSection()), requestDTO.getSeatNumber());
+//        Optional<SeatEntity> optionalSeatEntity = seatRepository.findBySectionAndSeatNumber(Section.valueOf(requestDTO.getSection()), requestDTO.getSeatNumber());
+//        if (optionalSeatEntity.isEmpty())
+//            throw new Exception("Selected seat Number is not available! Kindly choose some other seat");
 
-        if (optionalSeatEntity.isEmpty())
-            throw new Exception("Selected seat Number is not available! Kindly choose some other seat");
+        List<SeatEntity> seatEntityList = seatRepository.findAvailableSeats(requestDTO.getSection(), PageRequest.of(0, requestDTO.getQuantity()));
 
-
-        SeatEntity updatedSeatEntity = optionalSeatEntity.map(seatEntity -> {
+        List<SeatEntity> updatedSeatEntityList = seatEntityList.stream().map(seatEntity -> {
             seatEntity.setIsBooked(true);
             return seatRepository.save(seatEntity);
-        }).get();
+        }).toList();
+
+
+//        SeatEntity updatedSeatEntity = optionalSeatEntity.map(seatEntity -> {
+//            seatEntity.setIsBooked(true);
+//            return seatRepository.save(seatEntity);
+//        }).get();
 
         UserEntity userEntity = new UserEntity();
         userEntity.setFirstName(requestDTO.getUser().getFirstName());
@@ -66,7 +82,10 @@ public class TicketServiceImpl {
 
         List<TicketEntity> ticketEntityList = new ArrayList<>();
         UserEntity finalUserEntity = userEntity;
-        IntStream.rangeClosed(1, requestDTO.getQuantity()).forEach(index -> createTicketEntity(requestDTO, finalUserEntity, updatedSeatEntity, ticketEntityList));
+
+        updatedSeatEntityList.forEach(seatEntity -> createTicketEntity(requestDTO, finalUserEntity, seatEntity, ticketEntityList));
+
+//        IntStream.rangeClosed(1, requestDTO.getQuantity()).forEach(index -> createTicketEntity(requestDTO, finalUserEntity, updatedSeatEntity, ticketEntityList));
 
         return ticketEntityList.stream().map(this::createTicketAndReceipt).collect(Collectors.toList());
     }
@@ -131,17 +150,6 @@ public class TicketServiceImpl {
         return seatEntityList.stream().map(this::createSeatDTO).collect(Collectors.toList());
     }
 
-    private static void createTicketEntity(TicketPurchaseRequestDTO requestDTO, UserEntity finalUserEntity, SeatEntity seatEntity, List<TicketEntity> ticketEntityList) {
-        TicketEntity ticketEntity = new TicketEntity();
-        ticketEntity.setBookingDate(LocalDate.now());
-        ticketEntity.setBoardingStation(requestDTO.getFromLocation());
-        ticketEntity.setDestinationStation(requestDTO.getToLocation());
-        ticketEntity.setTravelDate(requestDTO.getTravelDate());
-        ticketEntity.setUser(finalUserEntity);
-        ticketEntity.setSeat(seatEntity);
-        ticketEntityList.add(ticketEntity);
-    }
-
     private TicketDTO createTicketAndReceipt(TicketEntity ticketEntity) {
         ticketEntity = ticketRepository.save(ticketEntity);
 
@@ -151,6 +159,7 @@ public class TicketServiceImpl {
     private TicketDTO createReceipt(TicketEntity ticketEntity) {
 
         TicketDTO ticketDTO = new TicketDTO();
+        ticketDTO.setId(ticketEntity.getId());
         ticketDTO.setPrice(ticketEntity.getTicketPrice());
         ticketDTO.setBookingDate(ticketEntity.getBookingDate());
         ticketDTO.setBoardingStation(ticketEntity.getBoardingStation());
