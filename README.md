@@ -40,7 +40,7 @@ POST /api/ticket/purchase
   "toLocation": "Paris",
   "travelDate": "2024-08-20",
   "section": "A",
-  "seatNumber": "1",
+  "seatNumber": "A1",
   "quantity": 2
 }
 ```
