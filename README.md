@@ -13,9 +13,6 @@ This project is a Ticket Management System designed to handle ticket purchases, 
 - Mockito (for unit testing)
 - Spring MockMvc (for integration testing)
 
-shell
-Copy code
-
 ## APIs
 
 ### 1. Purchase Ticket
